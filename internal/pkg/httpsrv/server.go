@@ -9,10 +9,13 @@ import (
 	"time"
 
 	"goapp/internal/pkg/watcher"
+	"goapp/pkg/util"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+const CSRF_TOKEN_TTL = 3600 // seconds
 
 type Server struct {
 	strChan      <-chan string               // String channel.
@@ -22,6 +25,10 @@ type Server struct {
 	sessionStats []*sessionStats             // Session stats.
 	quitChannel  chan struct{}               // Quit channel.
 	running      sync.WaitGroup              // Running goroutines.
+
+	// New fields
+	csrfTokens     map[string]int64
+	csrfTokensLock *sync.RWMutex
 }
 
 func New(strChan <-chan string) *Server {
@@ -33,6 +40,8 @@ func New(strChan <-chan string) *Server {
 	s.sessionStats = []*sessionStats{}
 	s.quitChannel = make(chan struct{})
 	s.running = sync.WaitGroup{}
+	s.csrfTokens = make(map[string]int64)
+	s.csrfTokensLock = &sync.RWMutex{}
 	return &s
 }
 
@@ -70,8 +79,9 @@ func (s *Server) Start() error {
 		}
 	}()
 
-	s.running.Add(1)
+	s.running.Add(2)
 	go s.mainLoop()
+	go s.invalidateCsrfTokens()
 
 	return nil
 }
@@ -99,4 +109,50 @@ func (s *Server) mainLoop() {
 			return
 		}
 	}
+}
+
+// Loop over the csrfTokens list and delete the expired tokens
+func (s *Server) invalidateCsrfTokens() {
+	defer s.running.Done()
+
+	for {
+		select {
+		case <-s.quitChannel:
+			return
+		default:
+			s.csrfTokensLock.Lock()
+			for k, v := range s.csrfTokens {
+				if util.TTLExpired(v, s.getCsrfTtl()) {
+					delete(s.csrfTokens, k)
+				}
+			}
+			s.csrfTokensLock.Unlock()
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
+func (s *Server) isValidCsrfToken(_csrfToken string) bool {
+	s.csrfTokensLock.RLock()
+	defer s.csrfTokensLock.RUnlock()
+	if createdAt, ok := s.csrfTokens[_csrfToken]; ok {
+		if util.TTLExpired(createdAt, s.getCsrfTtl()) {
+			return false
+		}
+	} else {
+		return false
+	}
+	return true
+}
+
+func (s *Server) deleteCsrfToken(_csrfToken string) {
+	s.csrfTokensLock.Lock()
+	defer s.csrfTokensLock.Unlock()
+	if _, ok := s.csrfTokens[_csrfToken]; ok {
+		delete(s.csrfTokens, _csrfToken)
+	}
+}
+
+func (s *Server) getCsrfTtl() int64 {
+	return CSRF_TOKEN_TTL
 }

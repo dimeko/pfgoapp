@@ -3,9 +3,16 @@ package httpsrv
 import (
 	"html/template"
 	"net/http"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 func (s *Server) handlerHome(w http.ResponseWriter, r *http.Request) {
+	// Create csrf token
+	csrfToken := uuid.NewString()
+	s.csrfTokens[csrfToken] = time.Now().Unix()
+
 	template.Must(template.New("").Parse(`
 <!DOCTYPE html>
 <html>
@@ -26,7 +33,7 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("{{.}}");
+        ws = new WebSocket("{{.WsEndpoint}}");
         ws.onopen = function(evt) {
             print("OPEN");
         }
@@ -78,5 +85,9 @@ You can change the message and send multiple times.
 </td></tr></table>
 </body>
 </html>
-`)).Execute(w, "ws://"+r.Host+"/goapp/ws")
+`)).Execute(w, struct {
+		WsEndpoint string
+	}{
+		WsEndpoint: "ws://" + r.Host + "/goapp/ws/" + csrfToken,
+	})
 }

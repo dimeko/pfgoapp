@@ -25,7 +25,7 @@ func (s *Server) myRoutes() []Route {
 		{
 			Name:    "websocket",
 			Method:  "GET",
-			Pattern: "/goapp/ws",
+			Pattern: "/goapp/ws/{csrfToken}",
 			HFunc:   s.handlerWrapper(s.handlerWebSocket),
 		},
 		{
