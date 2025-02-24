@@ -25,3 +25,9 @@ func TestRandString(t *testing.T) {
 		t.Errorf("Generated string is not a hex string: %s", _randString)
 	}
 }
+
+func BenchmarkRandString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = RandString(10)
+	}
+}
