@@ -15,19 +15,14 @@ type Route struct {
 }
 
 func (s *Server) myRoutes() []Route {
-	return []Route{
+	routes := []Route{
 		{
 			Name:    "health",
 			Method:  "GET",
 			Pattern: "/goapp/health",
 			HFunc:   s.handlerWrapper(s.handlerHealth),
 		},
-		{
-			Name:    "websocket",
-			Method:  "GET",
-			Pattern: "/goapp/ws/{csrfToken}",
-			HFunc:   s.handlerWrapper(s.handlerWebSocket),
-		},
+
 		{
 			Name:    "home",
 			Method:  "GET",
@@ -35,6 +30,17 @@ func (s *Server) myRoutes() []Route {
 			HFunc:   s.handlerWrapper(s.handlerHome),
 		},
 	}
+
+	wsRoute := Route{
+		Name:    "websocket",
+		Method:  "GET",
+		Pattern: "/goapp/ws/{csrfToken}",
+		HFunc:   s.handlerWrapper(s.handlerWebSocket),
+	}
+	if !s.csrfProtection {
+		wsRoute.Pattern = "/goapp/ws"
+	}
+	return append(routes, wsRoute)
 }
 
 func (s *Server) handlerWrapper(handlerFunc func(http.ResponseWriter, *http.Request)) http.Handler {
