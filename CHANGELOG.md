@@ -10,5 +10,7 @@ Fixed:
 Added:
 - Added csrf protection mechanism [pr](https://github.com/dimeko/pfgoapp/pull/2)
 
+- Added random hex string to websockets response
+
 Changed:
 - Changed `RandString` generator to produce hex strings [pr](https://github.com/dimeko/pfgoapp/pull/3)
