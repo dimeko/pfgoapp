@@ -8,10 +8,21 @@ import (
 
 	"goapp/internal/pkg/watcher"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
 func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
+	// Get csrfToken
+	csrfToken := mux.Vars(r)["csrfToken"]
+
+	if !s.isValidCsrfToken(csrfToken) {
+		s.error(w, http.StatusInternalServerError, fmt.Errorf("bad csrf token"))
+		return
+	}
+	// Delete csrfToken now in order to prevent new connections
+	s.deleteCsrfToken(csrfToken)
+
 	// Create and start a watcher.
 	var watch = watcher.New()
 	if err := watch.Start(); err != nil {
