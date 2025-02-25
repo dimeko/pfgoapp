@@ -27,11 +27,12 @@ type Server struct {
 	running      sync.WaitGroup              // Running goroutines.
 
 	// New fields
+	csrfProtection bool
 	csrfTokens     map[string]int64
 	csrfTokensLock *sync.RWMutex
 }
 
-func New(strChan <-chan string) *Server {
+func New(strChan <-chan string, csrfProtection bool) *Server {
 	s := Server{}
 	s.strChan = strChan
 	s.server = nil // Set below.
@@ -40,6 +41,8 @@ func New(strChan <-chan string) *Server {
 	s.sessionStats = []*sessionStats{}
 	s.quitChannel = make(chan struct{})
 	s.running = sync.WaitGroup{}
+
+	s.csrfProtection = csrfProtection
 	s.csrfTokens = make(map[string]int64)
 	s.csrfTokensLock = &sync.RWMutex{}
 	return &s

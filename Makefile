@@ -1,14 +1,17 @@
 .DEFAULT_GOAL := goapp
+APPS=server client
+BIN_DIR=bin
 
-.PHONY: all
-all: clean goapp
+.PHONY: all clean mkdir
 
-.PHONY: goapp
-goapp:
-	mkdir -p bin
-	go build -o bin ./...
+all: clean $(APPS)
 
-.PHONY: clean
+$(APPS): mkdir
+	go build -o $(BIN_DIR)/$@ ./cmd/$@
+
+mkdir:
+	$@ -p $(BIN_DIR)
+
 clean:
 	go clean
-	rm -f bin/*
+	rm -f $(BIN_DIR)/*

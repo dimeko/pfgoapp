@@ -5,12 +5,14 @@ Initial version.
 ### (unreleased)
 
 Fixed:
-- Fixed number of iterations not updating [pr](https://github.com/dimeko/pfgoapp/pull/1)
+- Fixed number of iterations not updating [pr](https://github.com/dimeko/pfgoapp/pull/1).
 
 Added:
-- Added csrf protection mechanism [pr](https://github.com/dimeko/pfgoapp/pull/2)
+- Added csrf protection mechanism [pr](https://github.com/dimeko/pfgoapp/pull/2).
 
-- Added random hex string to websockets response
+- Added random hex string to websockets response.
+
+- Added cli client that opens multiple connections to the server.
 
 Changed:
-- Changed `RandString` generator to produce hex strings [pr](https://github.com/dimeko/pfgoapp/pull/3)
+- Changed `RandString` generator to produce hex strings [pr](https://github.com/dimeko/pfgoapp/pull/3).
