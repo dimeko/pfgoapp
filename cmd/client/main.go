@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,10 +21,6 @@ var (
 	logger  *slog.Logger
 )
 
-func printStats() {
-
-}
-
 func connect(c int, s chan<- int, exitChan <-chan struct{}) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -31,12 +28,10 @@ func connect(c int, s chan<- int, exitChan <-chan struct{}) {
 			s <- c
 		}
 	}()
-
-	logger.Debug(fmt.Sprintf("%d connecting\n", c))
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 5 * time.Second,
 	}
-	conn, _, err1 := dialer.Dial(WS_ENDPOINT, nil)
+	conn, _, err1 := dialer.Dial(WS_ENDPOINT, http.Header{})
 	if err1 != nil {
 		if websocket.IsUnexpectedCloseError(err1, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 			logger.Debug(fmt.Sprintf("connection error: %v", err1))
@@ -44,6 +39,7 @@ func connect(c int, s chan<- int, exitChan <-chan struct{}) {
 			return
 		}
 	}
+	logger.Debug(fmt.Sprintf("client %d connected", c))
 
 	defer conn.Close()
 	for {
@@ -60,6 +56,7 @@ func connect(c int, s chan<- int, exitChan <-chan struct{}) {
 					websocket.CloseAbnormalClosure,
 					websocket.CloseProtocolError,
 					websocket.CloseInternalServerErr) {
+					logger.Debug(fmt.Sprintf("disconnection error: %v", err2))
 					s <- c
 					return
 				}
@@ -82,19 +79,24 @@ func main() {
 	if *connectionsNumberArg <= 0 {
 		log.Fatal("Number of connections must be a positive number")
 	}
-	var logHandlerOptions slog.HandlerOptions
+	var logHandlerOptions *slog.HandlerOptions
 	if *verboseArg {
-		logHandlerOptions = slog.HandlerOptions{
+		logHandlerOptions = &slog.HandlerOptions{
 			AddSource: false,
 			Level:     slog.LevelDebug,
 		}
 	} else {
-		logHandlerOptions = slog.HandlerOptions{
+		logHandlerOptions = &slog.HandlerOptions{
 			AddSource: false,
 			Level:     slog.LevelError,
 		}
 	}
-	logger = slog.New(slog.NewTextHandler(os.Stdout, &logHandlerOptions))
+
+	f, err := os.OpenFile("./client.log", os.O_TRUNC|os.O_CREATE|os.O_RDWR, 777)
+	if err != nil {
+		log.Fatal("could not open log file")
+	}
+	logger = slog.New(slog.NewTextHandler(f, logHandlerOptions))
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -115,7 +117,7 @@ func main() {
 			close(exitChan)
 		}
 		if counter == *connectionsNumberArg {
-			logger.Debug(fmt.Sprintln("All clients were diconnected successfully"))
+			log.Printf("All clients were disconnected successfully")
 			break
 		} else {
 			log.Printf("disconnected clients: %d", counter)
