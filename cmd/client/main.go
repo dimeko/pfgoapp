@@ -14,7 +14,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const WS_ENDPOINT = "ws://localhost:8080/goapp/ws"
+const (
+	WS_ENDPOINT = "ws://localhost:8080/goapp/ws"
+	LOG_FILE    = "client.log"
+)
 
 var (
 	verbose = false
@@ -92,11 +95,12 @@ func main() {
 		}
 	}
 
-	f, err := os.OpenFile("./client.log", os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
+	f, err := os.OpenFile("./"+LOG_FILE, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
 	if err != nil {
 		log.Fatal("could not open log file")
 	}
 	logger = slog.New(slog.NewTextHandler(f, logHandlerOptions))
+	log.Printf("logs in: %s\n", LOG_FILE)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -117,11 +121,11 @@ func main() {
 			close(exitChan)
 		}
 		if counter == *connectionsNumberArg {
-			log.Printf("All clients were disconnected successfully")
+			log.Printf("all clients have been disconnected successfully")
 			break
 		} else {
 			log.Printf("disconnected clients: %d", counter)
 		}
 	}
-	log.Println("Done :-)")
+	log.Println("done :-)")
 }
