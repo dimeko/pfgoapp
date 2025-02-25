@@ -1,9 +1,12 @@
 name: Unit testing
 run-name: ${{ github.actor }}
-on: [push]
+on:
+  pull_request:
+    branches: [ "develop", "main" ]
 jobs:
-    all-unit-tests:
-      runs-on: ubuntu-latest
-      steps:
-        - run: echo "Running unit tests with benchmarking"
-        - run: go test ./... -v -bench=. -benchmem
+  all-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Running tests and benchmarks  
+        run: go test ./... -v -bench=. -benchmem
