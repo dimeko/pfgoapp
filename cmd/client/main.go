@@ -92,7 +92,7 @@ func main() {
 		}
 	}
 
-	f, err := os.OpenFile("./client.log", os.O_TRUNC|os.O_CREATE|os.O_RDWR, 777)
+	f, err := os.OpenFile("./client.log", os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
 	if err != nil {
 		log.Fatal("could not open log file")
 	}
