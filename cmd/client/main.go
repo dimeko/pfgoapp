@@ -54,7 +54,7 @@ func connect(c int, s chan<- int, exitChan <-chan struct{}) {
 				if websocket.IsUnexpectedCloseError(err2, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseNoStatusReceived) {
 					logger.Debug(fmt.Sprintf("error parsing message: %v", err2))
 				} else {
-					logger.Debug(fmt.Sprintf("disconnection error: %v", err2))
+					logger.Debug(fmt.Sprintf("connection error: %v", err2))
 				}
 				s <- c
 				return
