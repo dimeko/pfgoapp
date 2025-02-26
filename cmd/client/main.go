@@ -36,11 +36,9 @@ func connect(c int, s chan<- int, exitChan <-chan struct{}) {
 	}
 	conn, _, err1 := dialer.Dial(WS_ENDPOINT, http.Header{})
 	if err1 != nil {
-		if websocket.IsUnexpectedCloseError(err1, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-			logger.Debug(fmt.Sprintf("connection error: %v", err1))
-			s <- c
-			return
-		}
+		logger.Debug(fmt.Sprintf("client %d could not connect", c))
+		s <- c
+		return
 	}
 	logger.Debug(fmt.Sprintf("client %d connected", c))
 
@@ -53,18 +51,13 @@ func connect(c int, s chan<- int, exitChan <-chan struct{}) {
 		default:
 			_, msg, err2 := conn.ReadMessage()
 			if err2 != nil {
-				if !websocket.IsUnexpectedCloseError(err2,
-					websocket.CloseInvalidFramePayloadData,
-					websocket.CloseGoingAway,
-					websocket.CloseAbnormalClosure,
-					websocket.CloseProtocolError,
-					websocket.CloseInternalServerErr) {
+				if websocket.IsUnexpectedCloseError(err2, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseNoStatusReceived) {
+					logger.Debug(fmt.Sprintf("error parsing message: %v", err2))
+				} else {
 					logger.Debug(fmt.Sprintf("disconnection error: %v", err2))
-					s <- c
-					return
 				}
-				logger.Debug(fmt.Sprintf("error parsing message: %v", err2))
-				continue
+				s <- c
+				return
 			}
 			logger.Debug(fmt.Sprintf("from client %d: %s\n", c, msg))
 		}
