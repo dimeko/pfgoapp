@@ -2,6 +2,26 @@
 
 An application for Go knowledge assessment.
 
+### Run the application
+
+Build everything:
+```
+make all
+```
+Run the server:
+```
+./bin/server
+```
+Run the client:
+```
+./bin/client -n 50 -v
+```
+
+NOTES:
+- `-v` client flag starts verbose logging with output the file `client.log`
+- To run the client e.g. with 50 connections and verbose logs run: `./bin/client -n 50 -v`
+- To enable csrf protection to the server run: `./bin/server -csrf`
+
 ## Description
 
 This is a web application that utilises websockets. A client connects on `localhost:8080` and has three options: a) `open` a websocket connection that reads values from a counter b) `close` the websocket and c) reset the counter to zero. The counter is feeded from a random string generator. On WS session termination, statistics for terminated session are printed.

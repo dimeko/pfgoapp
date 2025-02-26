@@ -8,11 +8,14 @@ import (
 	"os"
 )
 
-func Start(exitChannel chan os.Signal) error {
+func Start(exitChannel chan os.Signal, cfg AppConfig) error {
 	var (
 		strChan = make(chan string, 100) // String channel with max parallel counter processes.
 		strCli  = strgen.New(strChan)    // String generator.
-		httpSrv = httpsrv.New(strChan)   // HTTP server.
+		httpSrv = httpsrv.New(
+			strChan,
+			cfg.CsrfProtection,
+		) // HTTP server.
 	)
 
 	// Start String Generator.

@@ -24,5 +24,5 @@ func (s *Server) incStats(id string) {
 		}
 	}
 	// Not found, add new.
-	s.sessionStats = append(s.sessionStats, sessionStats{id: id, sent: 1})
+	s.sessionStats = append(s.sessionStats, &sessionStats{id: id, sent: 1})
 }

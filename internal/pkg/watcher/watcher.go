@@ -21,7 +21,7 @@ func New() *Watcher {
 	w.id = uuid.NewString()
 	w.inCh = make(chan string, 1)
 	w.outCh = make(chan *Counter, 1)
-	w.counter = &Counter{Iteration: 0}
+	w.counter = &Counter{Iteration: 0, Value: ""}
 	w.counterLock = &sync.RWMutex{}
 	w.quitChannel = make(chan struct{})
 	w.running = sync.WaitGroup{}
@@ -33,10 +33,12 @@ func (w *Watcher) Start() error {
 	w.running.Add(1)
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
+		var str string
 		for {
 			select {
-			case <-w.inCh:
+			case str = <-w.inCh:
 				w.counter.Iteration += 1
+				w.counter.Value = str
 				select {
 				case w.outCh <- w.counter:
 				case <-w.quitChannel:
