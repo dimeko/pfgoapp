@@ -34,13 +34,20 @@ func connect(c int, s chan<- int, exitChan <-chan struct{}) {
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 5 * time.Second,
 	}
-	conn, _, err1 := dialer.Dial(WS_ENDPOINT, http.Header{})
-	if err1 != nil {
+	conn, _, err0 := dialer.Dial(WS_ENDPOINT, http.Header{})
+	if err0 != nil {
 		logger.Debug(fmt.Sprintf("client %d could not connect", c))
 		s <- c
 		return
 	}
 	logger.Debug(fmt.Sprintf("client %d connected", c))
+
+	err1 := conn.WriteMessage(websocket.TextMessage, []byte("{}"))
+	if err1 != nil {
+		logger.Debug(fmt.Sprintf("connection error: %v", err1))
+		s <- c
+		return
+	}
 
 	defer conn.Close()
 	for {
