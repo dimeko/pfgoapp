@@ -114,7 +114,7 @@ func main() {
 			close(exitChan)
 		}
 		if counter == *connectionsNumberArg {
-			log.Printf("all clients have been disconnected successfully")
+			log.Printf("all clients have been disconnected")
 			break
 		} else {
 			log.Printf("disconnected clients: %d", counter)
